@@ -26,15 +26,9 @@
              <asp:Label ID="errorMsg" runat="server" EnableViewState="false"></asp:Label>
              <br />
              <br />
-             <input type="hidden" id="g-recaptcha-response" name="g-recaptcha-response"/>
+     
         </div>
     </form>
-    <script>
-        grecaptcha.ready(function () {
-            grecaptcha.execute('6LdU3mIeAAAAAI7lWcHSws150CbsWz0qAGqN6N48', { action: 'Login' }).then(function (token) {
-                document.getElementById("g-recaptcha-response").value = token;
-            });
-        });
-    </script>
+
 </body>
 </html>

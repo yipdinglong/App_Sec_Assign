@@ -107,8 +107,7 @@ namespace App_Sec_Assignment
             string dbSalt = getDBSalt(userid);
             try
             {
-                if (ValidateCaptcha())
-                {
+            
                     if (dbSalt != null && dbSalt.Length > 0 && dbHash != null && dbHash.Length > 0)
                     {
                         string pwdWithSalt = pwd + dbSalt;
@@ -132,7 +131,7 @@ namespace App_Sec_Assignment
                         errorMsg.ForeColor = System.Drawing.Color.Red;
 
                     }
-                }
+          
             }
             catch (Exception ex)
             {
@@ -140,29 +139,6 @@ namespace App_Sec_Assignment
             }
             finally { }
         }
-        public bool ValidateCaptcha()
-        {
-            bool result = true;
-            string captcharesponse = Request.Form["g-recaptcha-response"];
-            HttpWebRequest req = (HttpWebRequest)WebRequest.Create("https://wwww.google.com/recaptcha/api/siteverify?secret=6LdU3mIeAAAAAEAsQWFxiKwkLkUEy6GjxizQCE6p &response=" + captcharesponse);
-            try
-            {
-                using (WebResponse wresponse = req.GetResponse())
-                {
-                    using(StreamReader readstream=new StreamReader(wresponse.GetResponseStream()))
-                    {
-                        string jsonResponse = readstream.ReadToEnd();
-                        JavaScriptSerializer js = new JavaScriptSerializer();
-                        myobject jsonobject = js.Deserialize<myobject>(jsonResponse);
-                        result = Convert.ToBoolean(jsonobject.success);
-                    }
-                }
-                return result;
-            }
-            catch(WebException ex)
-            {
-                throw ex;
-            }
-        }
+    
     }
 }
