@@ -198,12 +198,6 @@ namespace App_Sec_Assignment
                 erroremail.ForeColor = Color.Red;
                 return 0;
             }
-            if (!Regex.IsMatch(email, "^([a-zA-Z0-9_.-])+@(([a-zA-Z0-9-])+.)+([a-zA-Z0-9]{2,4})+$"))
-            {
-                erroremail.Text = "Invalid Email";
-                erroremail.ForeColor = Color.Red;
-                return 1;
-            }
             else
             {
                 erroremail.Text = "Valid Email";
