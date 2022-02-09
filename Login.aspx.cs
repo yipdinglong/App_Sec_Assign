@@ -12,7 +12,8 @@ using System.Net;
 using System.IO;
 using System.Web.Script.Serialization;
 using System.Web.Services;
-
+using System.Diagnostics;
+using System.Threading;
 namespace App_Sec_Assignment
 {
     public partial class Login : System.Web.UI.Page
@@ -22,9 +23,10 @@ namespace App_Sec_Assignment
         static string salt;
         byte[] Key;
         byte[] IV;
+        static int attempts = 0;
+        static bool lockout = false;
         protected void Page_Load(object sender, EventArgs e)
         {
-
         }
         public class myobject
         {
@@ -97,7 +99,6 @@ namespace App_Sec_Assignment
             return s;
         }
 
-
         protected void LogIn(object sender, EventArgs e)
         {
             string pwd = log_psswd.Text.ToString().Trim();
@@ -107,7 +108,8 @@ namespace App_Sec_Assignment
             string dbSalt = getDBSalt(userid);
             try
             {
-            
+                if (Validatelockout(userid) == false)
+                {
                     if (dbSalt != null && dbSalt.Length > 0 && dbHash != null && dbHash.Length > 0)
                     {
                         string pwdWithSalt = pwd + dbSalt;
@@ -119,19 +121,53 @@ namespace App_Sec_Assignment
                             string guid = Guid.NewGuid().ToString();
                             Session["AuthToken"] = guid;
                             Response.Cookies.Add(new HttpCookie("AuthToken", guid));
+                            Session["UserID"] = userid;
                             Response.Redirect("Home.aspx", false);
                         }
-
-
-
+                        else
+                        {
+                            if (ValidateEmail3(userid) == false)
+                            {
+                                errorMsg.Text = "Wrong Email or Password. Please try again.";
+                                errorMsg.ForeColor = System.Drawing.Color.Red;
+                            }
+                            else
+                            {
+                                attempts += 1;
+                                errorMsg.Text = "Email or Password is not valid. Please try again." + "Your account has " + (3 - attempts) + " tries left before your account get lockout";
+                                errorMsg.ForeColor = System.Drawing.Color.Red;
+                            }
+                        }
                     }
                     else
                     {
-                        errorMsg.Text = "Email or Password is not valid. Please try again.";
+                        errorMsg.Text = "Email or Password Incorrect. Please try again.";
                         errorMsg.ForeColor = System.Drawing.Color.Red;
 
                     }
-          
+                }
+                else
+                {
+                    errorMsg.Text = "Your account has been locked Out due to 3 login failures";
+                    errorMsg.ForeColor = System.Drawing.Color.Red;
+                }
+                if (attempts == 3)
+                {
+                    errorMsg.Text = "Your account has been locked Out due to 3 login failures";
+                    errorMsg.ForeColor = System.Drawing.Color.Red;
+                    setlockout(userid);
+                    attempts = 0;
+                    lockout = true;
+                }
+                if (lockout == true)
+                {
+                    System.Threading.Thread.Sleep(1000);
+                    setfalselockout(log_email.Text);
+                    errorMsg.Text = "";
+                    lockoutmsg.Text = "Account recovered";
+                    lockoutmsg.ForeColor = System.Drawing.Color.Green;
+                }
+
             }
             catch (Exception ex)
             {
@@ -139,6 +175,151 @@ namespace App_Sec_Assignment
             }
             finally { }
         }
-    
+
+        public bool ValidateCaptcha()
+        {
+            bool result = true;
+            string captcharesponse = Request.Form["g-recaptcha-response"];
+            HttpWebRequest req = (HttpWebRequest)WebRequest.Create("https://wwww.google.com/recaptcha/api/siteverify?secret= &response=" + captcharesponse);
+            try
+            {
+                using (WebResponse wresponse = req.GetResponse())
+                {
+                    using (StreamReader readstream = new StreamReader(wresponse.GetResponseStream()))
+                    {
+                        string jsonResponse = readstream.ReadToEnd();
+                        JavaScriptSerializer js = new JavaScriptSerializer();
+                        myobject jsonobject = js.Deserialize<myobject>(jsonResponse);
+                        result = Convert.ToBoolean(jsonobject.success);
+                    }
+                }
+                return result;
+            }
+            catch (WebException ex)
+            {
+                throw ex;
+            }
+        }
+        protected bool ValidateEmail3(String compareemail)
+        {
+            bool check = false;
+            SqlConnection connection = new SqlConnection(MYDBConnectionString);
+            string sql = "select * FROM Account WHERE Email=@compareemail";
+            SqlCommand command = new SqlCommand(sql, connection);
+            command.Parameters.AddWithValue("@compareemail", compareemail);
+            try
+            {
+                connection.Open();
+                using (SqlDataReader reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+
+                        if (reader["Email"].ToString() == compareemail)
+                        {
+                            check = true;
+                        }
+                    }
+                }
+                return check;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.ToString());
+            }
+            finally
+            {
+                connection.Close();
+            }
+        }
+        protected void setlockout(string lockemail)
+        {
+            try
+            {
+
+                using (SqlConnection con = new SqlConnection(MYDBConnectionString))
+                {
+                    using (SqlCommand cmd = new SqlCommand("Update ACCOUNT set lockout='true' where Email=@lockemail "))
+                    {
+                        using (SqlDataAdapter sda = new SqlDataAdapter())
+                        {
+                            cmd.CommandType = CommandType.Text;
+                            cmd.Parameters.AddWithValue("@lockemail", lockemail);
+                            cmd.Connection = con;
+                            con.Open();
+                            cmd.ExecuteNonQuery();
+                            con.Close();
+
+                        }
+                    }
+                }
+
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.ToString());
+            }
+        }
+        protected bool Validatelockout(String compareemail)
+        {
+            bool check = false;
+            SqlConnection connection = new SqlConnection(MYDBConnectionString);
+            string sql = "select * FROM Account WHERE Email=@compareemail";
+            SqlCommand command = new SqlCommand(sql, connection);
+            command.Parameters.AddWithValue("@compareemail", compareemail);
+            try
+            {
+                connection.Open();
+                using (SqlDataReader reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+
+                        if (reader["lockout"].ToString() == "true")
+                        {
+                            check = true;
+                        }
+                    }
+                }
+                return check;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.ToString());
+            }
+            finally
+            {
+                connection.Close();
+            }
+        }
+        protected void setfalselockout(string lockemail)
+        {
+            try
+            {
+
+                using (SqlConnection con = new SqlConnection(MYDBConnectionString))
+                {
+                    using (SqlCommand cmd = new SqlCommand("Update ACCOUNT set lockout='false' where Email=@lockemail "))
+                    {
+                        using (SqlDataAdapter sda = new SqlDataAdapter())
+                        {
+                            cmd.CommandType = CommandType.Text;
+                            cmd.Parameters.AddWithValue("@lockemail", lockemail);
+                            cmd.Connection = con;
+                            con.Open();
+                            cmd.ExecuteNonQuery();
+                            con.Close();
+
+                        }
+                    }
+                }
+
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.ToString());
+            }
+        }
+
     }
 }
