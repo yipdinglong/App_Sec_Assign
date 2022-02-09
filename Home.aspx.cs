@@ -33,7 +33,7 @@ namespace App_Sec_Assignment
                 else
                 {
                     userid = Session["loggedIn"].ToString();
-                    displaylogindetails(userid);
+        
                     successMsg.Text = "You have successfully logged in ! ";
                     successMsg.ForeColor = System.Drawing.Color.Green;
                     logoutbtn.Visible = true;
