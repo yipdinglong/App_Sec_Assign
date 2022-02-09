@@ -32,9 +32,9 @@ namespace App_Sec_Assignment
                 }
                 else
                 {
-                    userid = (string) Session["userID"];
-                    successMsg.Text = "You have successfully logged in ! ";
+                    userid = Session["loggedIn"].ToString();
                     displaylogindetails(userid);
+                    successMsg.Text = "You have successfully logged in ! ";
                     successMsg.ForeColor = System.Drawing.Color.Green;
                     logoutbtn.Visible = true;
                 }
