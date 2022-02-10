@@ -25,8 +25,10 @@ namespace App_Sec_Assignment
         byte[] IV;
         static int attempts = 0;
         static bool lockout = false;
+        static DateTime date;
         protected void Page_Load(object sender, EventArgs e)
         {
+
         }
         public class myobject
         {
@@ -153,21 +155,20 @@ namespace App_Sec_Assignment
                 }
                 if (attempts == 3)
                 {
+                    date = DateTime.Now;
                     errorMsg.Text = "Your account has been locked Out due to 3 login failures";
                     errorMsg.ForeColor = System.Drawing.Color.Red;
                     setlockout(userid);
                     attempts = 0;
                     lockout = true;
                 }
-                if (lockout == true)
+                if (DateTime.Now>=date.AddSeconds(10) && lockout==true)
                 {
-                    System.Threading.Thread.Sleep(1000);
                     setfalselockout(log_email.Text);
                     errorMsg.Text = "";
                     lockoutmsg.Text = "Account recovered";
                     lockoutmsg.ForeColor = System.Drawing.Color.Green;
                 }
-
             }
             catch (Exception ex)
             {
@@ -175,7 +176,6 @@ namespace App_Sec_Assignment
             }
             finally { }
         }
-
         public bool ValidateCaptcha()
         {
             bool result = true;
@@ -320,6 +320,7 @@ namespace App_Sec_Assignment
                 throw new Exception(ex.ToString());
             }
         }
+
 
     }
 }
