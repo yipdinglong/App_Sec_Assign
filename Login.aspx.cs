@@ -110,7 +110,7 @@ namespace App_Sec_Assignment
             string dbSalt = getDBSalt(userid);
             try
             {
-                if (Validatelockout(userid) == false)
+                if (Validatelockout(userid) == false && ValidateCaptcha())
                 {
                     if (dbSalt != null && dbSalt.Length > 0 && dbHash != null && dbHash.Length > 0)
                     {
@@ -123,7 +123,6 @@ namespace App_Sec_Assignment
                             string guid = Guid.NewGuid().ToString();
                             Session["AuthToken"] = guid;
                             Response.Cookies.Add(new HttpCookie("AuthToken", guid));
-                            Session["UserID"] = userid;
                             Response.Redirect("Home.aspx", false);
                         }
                         else
