@@ -110,9 +110,9 @@ namespace App_Sec_Assignment
             string dbSalt = getDBSalt(userid);
             try
             {
-                if (Validatelockout(userid) == false && ValidateCaptcha())
+                if (Validatelockout(userid) == false)
                 {
-                    if (dbSalt != null && dbSalt.Length > 0 && dbHash != null && dbHash.Length > 0)
+                    if (dbSalt != null && dbSalt.Length > 0 && dbHash != null && dbHash.Length > 0 && ValidateCaptcha())
                     {
                         string pwdWithSalt = pwd + dbSalt;
                         byte[] hashWithSalt = hashing.ComputeHash(Encoding.UTF8.GetBytes(pwdWithSalt));
