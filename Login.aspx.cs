@@ -112,7 +112,7 @@ namespace App_Sec_Assignment
             {
                 if (Validatelockout(userid) == false)
                 {
-                    if (dbSalt != null && dbSalt.Length > 0 && dbHash != null && dbHash.Length > 0 && ValidateCaptcha())
+                    if (dbSalt != null && dbSalt.Length > 0 && dbHash != null && dbHash.Length > 0)
                     {
                         string pwdWithSalt = pwd + dbSalt;
                         byte[] hashWithSalt = hashing.ComputeHash(Encoding.UTF8.GetBytes(pwdWithSalt));
